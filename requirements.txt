@@ -1,0 +1,15 @@
+numpy
+pandas
+scipy
+statsmodels
+arch
+scikit-learn
+matplotlib
+plotly
+openpyxl
+pyarrow
+jupyter
+ipykernel
+python-dotenv
+pyyaml
+pytest
