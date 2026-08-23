@@ -636,6 +636,52 @@ As versões utilizadas no estudo devem ser registradas no `requirements.txt` par
 
 ---
 
+## 12.1 Alternativa (opcional): usando `uv`
+
+O projeto também possui um `pyproject.toml` e um `uv.lock`, mantidos em paralelo ao `requirements.txt`. Quem preferir pode usar o [`uv`](https://docs.astral.sh/uv/) em vez de `venv` + `pip` — os dois fluxos são equivalentes e o `requirements.txt` continua funcionando normalmente para quem não usa `uv`.
+
+Instale o `uv` (uma única vez por máquina):
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+No Windows/PowerShell:
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Crie o ambiente virtual e instale as dependências do `pyproject.toml`/`uv.lock` (substitui os passos 11 e 12 acima):
+
+```bash
+uv sync
+```
+
+Isso cria a `.venv` automaticamente na versão de Python especificada no `pyproject.toml` (3.12+) e instala exatamente as versões travadas no `uv.lock`, sem precisar ativar o ambiente manualmente.
+
+Para rodar qualquer comando dentro do ambiente do projeto, use `uv run`:
+
+```bash
+uv run python src/algum_script.py
+uv run pytest
+uv run jupyter lab
+```
+
+Para adicionar uma nova dependência ao projeto:
+
+```bash
+uv add nome-do-pacote
+```
+
+Isso atualiza `pyproject.toml` e `uv.lock` automaticamente. Se quiser manter o `requirements.txt` sincronizado para quem ainda usa `pip`, exporte a lista após alterar dependências:
+
+```bash
+uv export --no-hashes --format requirements-txt > requirements.txt
+```
+
+---
+
 # 13. Configurando o Jupyter
 
 Com o ambiente ativado:
@@ -657,6 +703,8 @@ jupyter lab
 ```
 
 ou utilize os notebooks diretamente pelo VS Code.
+
+> **Nota (opcional, uv):** quem estiver usando `uv` pode pular o registro manual do kernel e simplesmente rodar `uv run jupyter lab` — o Jupyter já sobe usando o ambiente do projeto (`.venv`) automaticamente.
 
 Selecione o kernel:
 

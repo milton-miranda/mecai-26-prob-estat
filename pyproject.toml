@@ -1,0 +1,22 @@
+[project]
+name = "mecai-26-prob-estat"
+version = "0.1.0"
+description = "Análise de inflação PBF no preço do Feijão"
+requires-python = ">=3.12"
+dependencies = [
+    "arch>=8.0.0",
+    "ipykernel>=7.3.0",
+    "jupyter>=1.1.1",
+    "matplotlib>=3.11.1",
+    "numpy>=2.5.2",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.5",
+    "plotly>=6.9.0",
+    "pyarrow>=25.0.1",
+    "pytest>=9.1.1",
+    "python-dotenv>=1.2.3",
+    "pyyaml>=6.0.3",
+    "scikit-learn>=1.9.0",
+    "scipy>=1.18.1",
+    "statsmodels>=0.14.6",
+]
