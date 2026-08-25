@@ -24,3 +24,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.log
+
+# Generated data (reproducible via download.py / convert.py / main.py)
+data/raw/diesel/data/

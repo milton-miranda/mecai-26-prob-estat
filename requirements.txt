@@ -13,3 +13,5 @@ ipykernel
 python-dotenv
 pyyaml
 pytest
+requests
+duckdb
