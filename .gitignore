@@ -25,5 +25,7 @@ Thumbs.db
 *.tmp
 *.log
 
-# Generated data (reproducible via download.py / convert.py / main.py)
+# Generated data (reproducível via src/diesel.py, ou lido direto do Hugging Face Hub)
 data/raw/diesel/data/
+data/interim/diesel/
+data/processed/diesel/

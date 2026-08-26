@@ -790,6 +790,46 @@ Arquivos de dados muito grandes, restritos ou que possam conter informações se
 
 ---
 
+## 15.1 Compartilhando dados via Hugging Face Hub
+
+Os arquivos de `data/interim/` e `data/processed/` não são versionados no Git (ver `.gitignore`) — eles são grandes demais e mudam sempre que o pipeline de uma fonte é reprocessado. Em vez disso, o time compartilha esses dados por um dataset público no Hugging Face Hub:
+
+```text
+https://huggingface.co/datasets/pbf-feijao-mecai-usp/bf-feijao-dados
+```
+
+A estrutura no Hub espelha `data/`: `interim/<fonte>/...` e `processed/<fonte>/...` (ex.: `interim/diesel/diesel.parquet`). Os dados brutos (`data/raw/`) não sobem pro Hub — devem ser reproduzíveis a partir do código de ingestão de cada fonte (ver `src/`).
+
+### Lendo os dados (não precisa de token — o dataset é público)
+
+Com `huggingface-hub` instalado (já está no `pyproject.toml`/`requirements.txt`), o pandas lê parquet direto da URL `hf://`:
+
+```python
+import pandas as pd
+
+df = pd.read_parquet("hf://datasets/pbf-feijao-mecai-usp/bf-feijao-dados/interim/diesel/diesel.parquet")
+```
+
+### Publicando dados novos (precisa de token de escrita)
+
+1. Crie um token em <https://huggingface.co/settings/tokens> (tipo **Write**) — peça pra ser adicionado à organization `pbf-feijao-mecai-usp` se ainda não tiver acesso.
+2. Salve o token no `.env` da raiz do projeto (o `.env` já está no `.gitignore`, nunca commite o token):
+
+```text
+huggingface_token=hf_xxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+3. Rode o pipeline da fonte de dados normalmente (ex. `notebooks/01_data_ingestion_cleaning_diesel.ipynb`) pra gerar os parquets locais em `data/interim/`/`data/processed/`.
+4. Suba pro Hub:
+
+```bash
+uv run python -m src.hub
+```
+
+Isso chama `push_diesel()` em `src/hub.py`, que sincroniza `data/interim/diesel/` e `data/processed/diesel/` com o dataset no Hub. Ao adicionar uma nova fonte de dados, crie a função equivalente (`push_<fonte>()`) reaproveitando `push_folder()`.
+
+---
+
 # 16. Fluxo Git recomendado
 
 Antes de iniciar uma alteração:

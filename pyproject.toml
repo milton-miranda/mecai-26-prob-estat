@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "arch>=8.0.0",
     "duckdb>=1.5.5",
+    "huggingface-hub>=1.28.0",
     "ipykernel>=7.3.0",
     "jupyter>=1.1.1",
     "matplotlib>=3.11.1",
