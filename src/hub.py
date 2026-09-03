@@ -56,3 +56,10 @@ def push_diesel() -> None:
 
 if __name__ == "__main__":
     push_diesel()
+
+
+def push_producao_feijao():
+    """Sincroniza os dados da produção de feijão com o Hugging Face Hub."""
+    print("Enviando dados da produção do feijao para o Hub...")
+    push_folder("data/processed/producao_feijao", "processed/producao_feijao")
+    
