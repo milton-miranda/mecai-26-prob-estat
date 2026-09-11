@@ -1408,6 +1408,7 @@ dependencies = [
     { name = "numpy" },
     { name = "openpyxl" },
     { name = "pandas" },
+    { name = "phik" },
     { name = "plotly" },
     { name = "pyarrow" },
     { name = "pytest" },
@@ -1431,6 +1432,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.5.2" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=3.0.5" },
+    { name = "phik", specifier = ">=0.12.5" },
     { name = "plotly", specifier = ">=6.9.0" },
     { name = "pyarrow", specifier = ">=25.0.1" },
     { name = "pytest", specifier = ">=9.1.1" },
@@ -1734,6 +1736,33 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9e/c3/059298687310d527a58bb01f3b1965787ee3b40dce76752eda8b44e9a2c5/pexpect-4.9.0-py2.py3-none-any.whl", hash = "sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523", size = 63772, upload-time = "2023-11-25T06:56:14.81Z" },
+]
+
+[[package]]
+name = "phik"
+version = "0.12.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "joblib" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/47/44/e8e26bcef558feb3668b073361c036bfef5de32d87061fc26cb1cf2e0124/phik-0.12.5.tar.gz", hash = "sha256:dfc15a9166ab0dcfe3f5f60de606fe9ce064a09af2dd212e726ed3625b795332", size = 621690, upload-time = "2025-07-17T13:54:29.565Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4f/0e/1f09b1e117fec9b73ea5f84061e0c1f47c86b09903382ab6b8176af9b3a4/phik-0.12.5-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:1209672e13c454cab6d3121ec17ad845c5cbaf9469740ccf4eaaa7a3ddc5f1b1", size = 671684, upload-time = "2025-07-17T13:54:19.215Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/5c/8de0d369cb24a19a45c43af9627a38e83a46dca414ca287eac2724f21528/phik-0.12.5-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:87c990eee90c82a82cc4041321fbcddb5b156416c773de638cf1a6d267a7ef08", size = 665707, upload-time = "2025-07-17T13:54:20.341Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/44/50ebfa57d81d00a3125efb907c707b7bce9c79266dd354820888ab47359c/phik-0.12.5-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:576286429a0ea5cbdff13e133599f3f17717c9a680e85fb121e6b56401154516", size = 679710, upload-time = "2025-07-17T13:54:21.852Z" },
+    { url = "https://files.pythonhosted.org/packages/80/98/0d1a58c5a69422f599a80b412dbfa580f7800f85e594b151456e78291085/phik-0.12.5-cp312-cp312-win_amd64.whl", hash = "sha256:5c4cc07d95008b150467364c6e9a9a5d75170df7360a4148816cccba741978a3", size = 676234, upload-time = "2025-07-17T13:54:23.084Z" },
+    { url = "https://files.pythonhosted.org/packages/27/b9/651cc4b58bd0d4f3362b72ecb8691cd0dba404c3e62be239cba141a461f6/phik-0.12.5-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:95f5de5cd0e8b7ce2cc976d257a6ee8f0b74888d6342b0f0ace7df6728b18757", size = 670659, upload-time = "2025-10-10T14:26:02.426Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/24/f3ee42f54ff3e2de58458fb58f5faa1c80b7a42de83f5e30f612569c9871/phik-0.12.5-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:8b335ee26f0817e2e79719ae00e0363099098cbabd3b6b998906a3b92239b88f", size = 666924, upload-time = "2025-10-10T14:26:04.05Z" },
+    { url = "https://files.pythonhosted.org/packages/02/f2/327a4d595a98e5797c53c6b9f7241ad205a8bc90db04cda132db9efc477f/phik-0.12.5-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9dc76280080e2b20ec341e40f2ee55e1824abe303f1b7af0958f1aedfaada859", size = 682496, upload-time = "2025-10-10T14:26:05.121Z" },
+    { url = "https://files.pythonhosted.org/packages/03/70/435faffb2c27f48acdcf075c27992d572fad3f6876517c4547a665a8c553/phik-0.12.5-cp313-cp313-win_amd64.whl", hash = "sha256:8cfc30f872900531cd56a242537db0a4da61fb46512d58b2d1dc7fb98eff4438", size = 678071, upload-time = "2025-10-10T14:26:06.536Z" },
+    { url = "https://files.pythonhosted.org/packages/23/eb/91b85218f8f273b9cda1b172f79e383701f9f0f4edc8afb0dceb64d60d75/phik-0.12.5-cp314-cp314-macosx_10_13_x86_64.whl", hash = "sha256:603425410d79cb8bf7b1b59a66e67ad821c78a7871717fdc15a53db6ba8da744", size = 670711, upload-time = "2025-10-10T14:26:07.663Z" },
+    { url = "https://files.pythonhosted.org/packages/b7/b9/d6413e678c2c4792df5c87ce1629dd7a86d08a4d22a268081fbb8ddc4351/phik-0.12.5-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:4ecf498afa5273e76887556885716c9b0bb750e016baa8bafa694c754e25a9cb", size = 667046, upload-time = "2025-10-10T14:26:08.743Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/d0/8d34c1790b5539bfdfcd9e0429f45a3a608f53dc16d788b9bef48fdeb086/phik-0.12.5-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7eb23a6e6c882ab706d629db541be4ce16f25cead9f8db3f96bf0d3b9fa60716", size = 682551, upload-time = "2025-10-10T14:26:10.215Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/7d/ad3b73b67ee57fb8eee85d88aa51262aa901dd035160cd7f64ea8d81a836/phik-0.12.5-cp314-cp314-win_amd64.whl", hash = "sha256:30586ab21b6e8f3ca12fdef2f3e61ed558a0bc5b9414e91a72eb51d3cc49cba8", size = 677539, upload-time = "2025-10-10T14:26:11.303Z" },
 ]
 
 [[package]]
