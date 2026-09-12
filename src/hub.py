@@ -53,6 +53,12 @@ def push_diesel() -> None:
     push_folder(DATA_INTERIM / "diesel", "interim/diesel")
     push_folder(DATA_PROCESSED / "diesel", "processed/diesel")
 
+def push_producao_feijao() -> None:
 
+    from src.config import DATA_PROCESSED
+    push_folder(DATA_PROCESSED / "safra", "processed/safra")
+    
+    
 if __name__ == "__main__":
-    push_diesel()
+    # push_diesel()
+    push_producao_feijao()
