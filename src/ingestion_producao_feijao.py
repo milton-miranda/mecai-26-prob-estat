@@ -35,6 +35,9 @@ def processar_dados_producao_feijao():
         .str.replace(r"ª\n", r' safra', regex=True)
         .str.replace(r"ª", r' safra', regex=True) 
         .str.lower()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
         .str.replace(r"\s+", "_", regex=True) 
         .str.strip("_")
     )
@@ -62,7 +65,7 @@ def processar_dados_producao_feijao():
     # producao_long[["mes", "ano", "safra", "descartar"]] = producao_long.periodo_safra.str.split("_", expand=True)
     # producao_long.drop(columns=["periodo_safra", "descartar"], inplace=True)
     
-    # Extraindo mês, ano e safra com regex seguro
+    # Extraindo mês, ano e safra com regex
     producao_long["mes"] = producao_long["periodo_safra"].str.extract(r'([a-z]+)')
     producao_long["ano"] = producao_long["periodo_safra"].str.extract(r'(\d{4})')
     producao_long["safra"] = producao_long["periodo_safra"].str.extract(r'(\d)_safra')
@@ -83,22 +86,63 @@ def processar_dados_producao_feijao():
         "setembro": 9, "outubro": 10, "novembro": 11, "dezembro": 12
     }
     
+    dic_regiao = {
+    # Região Norte
+    "acre": "Norte",
+    "amapa": "Norte",
+    "amazonas": "Norte",
+    "para": "Norte",
+    "rondonia": "Norte",
+    "roraima": "Norte",
+    "tocantins": "Norte",
+    
+    # Região Nordeste
+    "alagoas": "Nordeste",
+    "bahia": "Nordeste",
+    "ceara": "Nordeste",
+    "maranhao": "Nordeste",
+    "paraiba": "Nordeste",
+    "pernambuco": "Nordeste",
+    "piaui": "Nordeste",
+    "rio_grande_do_norte": "Nordeste",
+    "sergipe": "Nordeste",
+    
+    # Região Centro-Oeste
+    "distrito_federal": "Centro-Oeste",
+    "goias": "Centro-Oeste",
+    "mato_grosso": "Centro-Oeste",
+    "mato_grosso_do_sul": "Centro-Oeste",
+    
+    # Região Sudeste
+    "espirito_santo": "Sudeste",
+    "minas_gerais": "Sudeste",
+    "rio_de_janeiro": "Sudeste",
+    "sao_paulo": "Sudeste",
+    
+    # Região Sul
+    "parana": "Sul",
+    "rio_grande_do_sul": "Sul",
+    "santa_catarina": "Sul"
+}
+    
     producao_long["mes"] = (
         producao_long["mes"]
         .str.normalize("NFKD")
         .str.encode("ascii", errors="ignore")
         .str.decode("utf-8")
     )
+    
+    # Mapeamento dos meses e regiões
     producao_long["mes"] = producao_long["mes"].map(dic_meses)
+    producao_long["regiao"] = producao_long["uf"].map(dic_regiao)
     
     # Organizando as colunas finais
-    producao_long = producao_long[["ano", "mes", "uf", "safra", "quantidade_tons"]]
+    producao_long = producao_long[["ano", "mes", "uf", "safra", "quantidade_tons", "regiao"]]
     producao_long = producao_long.sort_values(by=["ano", "mes", "uf"]).reset_index(drop=True)
     
     # Salvando em formato Parquet no diretório
-    # Path(__file__) pega o caminho do script atual (src/). O .parent sobe para src/, o segundo .parent sobe para a raiz do projeto
     raiz_projeto = Path(__file__).parent.parent 
-    caminho_saida = raiz_projeto / "data" / "processed" / "safra"
+    caminho_saida = raiz_projeto / "data" / "interim" / "safra"
     caminho_saida.mkdir(parents=True, exist_ok=True)
     
     arquivo_saida = caminho_saida / "producao_feijao_tons.parquet"

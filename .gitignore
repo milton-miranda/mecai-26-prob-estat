@@ -29,3 +29,7 @@ Thumbs.db
 data/raw/diesel/data/
 data/interim/diesel/
 data/processed/diesel/
+
+data/raw/safra/
+data/interim/safra/
+data/processed/safra/
