@@ -6,6 +6,12 @@ Pipeline: data/raw/diesel/base.yaml
     -> convert_to_parquet() concatena os csv em data/raw/diesel/data/diesel.parquet
     -> clean()               filtra produtos diesel e renomeia colunas em
                               data/interim/diesel/diesel.parquet
+    -> download_ipca()       baixa o número-índice do IPCA (SIDRA) para
+                              data/raw/ipca/ipca.csv
+    -> deflate()             deflaciona valor_de_venda pelo IPCA (base: último
+                              mês da série) e grava valor_de_venda_real em
+                              data/interim/diesel/diesel_deflacionado.parquet
+                              (diesel.parquet nominal fica intacto)
     -> aggregate()            gera as bases agregadas em data/processed/diesel/
 """
 
@@ -30,7 +36,11 @@ BASE_YAML_PATH = RAW_DIR / "base.yaml"
 RAW_CSV_DIR = RAW_DIR / "data"
 RAW_PARQUET_PATH = RAW_CSV_DIR / "diesel.parquet"
 INTERIM_PARQUET_PATH = DATA_INTERIM / "diesel" / "diesel.parquet"
+INTERIM_DEFLACIONADO_PATH = DATA_INTERIM / "diesel" / "diesel_deflacionado.parquet"
 PROCESSED_DIR = DATA_PROCESSED / "diesel"
+
+IPCA_URL = "https://apisidra.ibge.gov.br/values/t/1737/n1/all/v/2266/p/all?formato=csv"
+IPCA_CSV_PATH = DATA_RAW / "ipca" / "ipca.csv"
 
 MAX_RETRIES = 5
 CHUNK_SIZE = 1024 * 1024
@@ -111,6 +121,13 @@ def download_all(
     for url in base_definition["content"]:
         print(f"Baixando {url}")
         download_base(url, destination_folder=destination_folder)
+
+
+def download_ipca(url: str = IPCA_URL, destination_path: Path = IPCA_CSV_PATH) -> None:
+    """Baixa a série histórica do número-índice do IPCA (SIDRA, tabela 1737, variável 2266)."""
+    destination_path.parent.mkdir(parents=True, exist_ok=True)
+    _stream_to_file(url, destination_path)
+    print(f"IPCA salvo em {destination_path}")
 
 
 # --- convert (csv -> parquet) --------------------------------------------
@@ -203,6 +220,77 @@ def clean(source_path: Path = RAW_PARQUET_PATH, output_path: Path = INTERIM_PARQ
     print(f"Parquet salvo em {output_path}")
 
 
+# --- deflate (preço real via IPCA) ----------------------------------------
+
+
+def _read_ipca_sql(ipca_path: Path) -> str:
+    return f"""
+        select
+            strptime(D3C, '%Y%m')::date as mes,
+            V as ipca_indice
+        from read_csv(
+            '{ipca_path}',
+            delim=';',
+            header=false,
+            skip=2,
+            names=['NC', 'NN', 'D1C', 'D1N', 'D2C', 'D2N', 'D3C', 'D3N', 'MC', 'MN', 'V'],
+            types=[
+                'VARCHAR', 'VARCHAR', 'VARCHAR', 'VARCHAR', 'VARCHAR', 'VARCHAR',
+                'VARCHAR', 'VARCHAR', 'VARCHAR', 'VARCHAR', 'DOUBLE'
+            ]
+        )
+    """
+
+
+def deflate(
+    source_path: Path = INTERIM_PARQUET_PATH,
+    ipca_path: Path = IPCA_CSV_PATH,
+    output_path: Path = INTERIM_DEFLACIONADO_PATH,
+) -> None:
+    """
+    Deflaciona valor_de_venda pelo IPCA, na base do último mês disponível na
+    série do IPCA (P_real = P_nominal * ipca_base / ipca_do_mes_da_coleta).
+    """
+    ipca_sql = _read_ipca_sql(ipca_path)
+
+    deflate_sql = f"""
+        with ipca as ({ipca_sql}),
+        ipca_base as (
+            select ipca_indice from ipca order by mes desc limit 1
+        )
+        select
+            diesel.* exclude (mes),
+            (select ipca_indice from ipca_base) / ipca.ipca_indice * diesel.valor_de_venda
+                as valor_de_venda_real
+        from (
+            select *, date_trunc('month', data_da_coleta) as mes
+            from '{source_path}'
+        ) as diesel
+        left join ipca on ipca.mes = diesel.mes
+    """
+
+    con = duckdb.connect()
+
+    missing = con.execute(f"""
+        select count(*)
+        from ({deflate_sql})
+        where valor_de_venda_real is null
+    """).fetchone()[0]
+    if missing:
+        raise ValueError(
+            f"{missing:,} linhas do diesel não têm mês correspondente na série do IPCA "
+            f"({ipca_path}) — verifique se a série do IPCA cobre todo o período do diesel."
+        )
+
+    tmp_output_path = output_path.with_suffix(".tmp.parquet")
+    con.execute(f"copy ({deflate_sql}) to '{tmp_output_path}' (format parquet)")
+    tmp_output_path.replace(output_path)
+
+    total_rows = con.execute(f"select count(*) from '{output_path}'").fetchone()[0]
+    print(f"Total: {total_rows:,} linhas")
+    print(f"Parquet salvo em {output_path}")
+
+
 # --- aggregate (bases mensais/anuais para análise) -------------------------
 
 
@@ -214,6 +302,9 @@ def _aggregations(source_path: Path) -> dict[str, str]:
                 avg(valor_de_venda) as preco_medio,
                 median(valor_de_venda) as preco_mediano,
                 stddev(valor_de_venda) as desvio_padrao,
+                avg(valor_de_venda_real) as preco_medio_real,
+                median(valor_de_venda_real) as preco_mediano_real,
+                stddev(valor_de_venda_real) as desvio_padrao_real,
                 count(*) as n
             from '{source_path}'
             group by 1
@@ -226,6 +317,9 @@ def _aggregations(source_path: Path) -> dict[str, str]:
                 avg(valor_de_venda) as preco_medio,
                 median(valor_de_venda) as preco_mediano,
                 stddev(valor_de_venda) as desvio_padrao,
+                avg(valor_de_venda_real) as preco_medio_real,
+                median(valor_de_venda_real) as preco_mediano_real,
+                stddev(valor_de_venda_real) as desvio_padrao_real,
                 count(*) as n
             from '{source_path}'
             group by 1, 2
@@ -238,6 +332,9 @@ def _aggregations(source_path: Path) -> dict[str, str]:
                 avg(valor_de_venda) as preco_medio,
                 median(valor_de_venda) as preco_mediano,
                 stddev(valor_de_venda) as desvio_padrao,
+                avg(valor_de_venda_real) as preco_medio_real,
+                median(valor_de_venda_real) as preco_mediano_real,
+                stddev(valor_de_venda_real) as desvio_padrao_real,
                 count(*) as n
             from '{source_path}'
             group by 1, 2
@@ -248,6 +345,7 @@ def _aggregations(source_path: Path) -> dict[str, str]:
                 select
                     year(data_da_coleta) as ano,
                     avg(valor_de_venda) as preco_medio,
+                    avg(valor_de_venda_real) as preco_medio_real,
                     count(*) as n
                 from '{source_path}'
                 group by 1
@@ -255,19 +353,27 @@ def _aggregations(source_path: Path) -> dict[str, str]:
             select
                 ano,
                 preco_medio,
+                preco_medio_real,
                 n,
                 round(
                     (preco_medio - lag(preco_medio) over (order by ano))
                     / lag(preco_medio) over (order by ano) * 100,
                     2
-                ) as variacao_yoy_pct
+                ) as variacao_yoy_pct,
+                round(
+                    (preco_medio_real - lag(preco_medio_real) over (order by ano))
+                    / lag(preco_medio_real) over (order by ano) * 100,
+                    2
+                ) as variacao_yoy_pct_real
             from anual
             order by ano
         """,
     }
 
 
-def aggregate(source_path: Path = INTERIM_PARQUET_PATH, output_dir: Path = PROCESSED_DIR) -> None:
+def aggregate(
+    source_path: Path = INTERIM_DEFLACIONADO_PATH, output_dir: Path = PROCESSED_DIR
+) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect()
     for name, sql in _aggregations(source_path).items():
@@ -281,4 +387,6 @@ if __name__ == "__main__":
     download_all()
     convert_to_parquet()
     clean()
+    download_ipca()
+    deflate()
     aggregate()
