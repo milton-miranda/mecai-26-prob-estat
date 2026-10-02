@@ -34,13 +34,15 @@ def consolidar_base_econometrica(salvar_parquet: bool = True) -> pd.DataFrame:
 
     # Alinhando as datas
     
+    print("Alinhando as datas")
+    
     # 1. Base Preços
     df_precos["data_referencia"] = pd.to_datetime(df_precos["ano"].astype(str) + "-" + df_precos["mes"].astype(str) + "-01")
     df_precos['capital_join'] = padronizar_texto(df_precos['capital'])
     
     # 2. Base Bolsa Família
     df_repasse["data_referencia"] = pd.to_datetime(df_repasse["periodo"].astype(str).str[:4] + "-" + df_repasse["periodo"].astype(str).str[4:] + "-01")
-    df_repasse['capital_join'] = padronizar_texto(df_repasse['capital'])
+    df_repasse['capital_join'] = padronizar_texto(df_repasse['cidade'])
 
     # 3. Base Safra 
     df_safra["data_referencia"] = pd.to_datetime(df_safra["ano"].astype(str) + "-" + df_safra["mes"].astype(str) + "-01")
@@ -59,22 +61,25 @@ def consolidar_base_econometrica(salvar_parquet: bool = True) -> pd.DataFrame:
         values=["valor_de_venda", "valor_de_venda_real"],
         aggfunc="mean"
     )
-    df_diesel_agrupado.columns = [f"{n0}_{n1}" for n0, n1 in df_diesel_agrupado.columns]
+    df_diesel_agrupado.columns = [f"{a0}_{a1}" for a0, a1 in df_diesel_agrupado.columns]
     df_diesel_agrupado.reset_index(inplace=True)
     df_diesel_agrupado.rename(columns={'municipio_limpo': 'capital_join'}, inplace=True)
 
-    # Médias
-    cols_real = df_diesel_agrupado.filter(like='valor_de_venda_real_diesel').columns
+    # Médias dinâmicas blindadas a NaNs
+    cols_real = df_diesel_agrupado.filter(like='valor_de_venda_real_DIESEL').columns
     df_diesel_agrupado['venda_real_diesel_media_geral'] = df_diesel_agrupado[cols_real].astype(float).mean(axis=1, skipna=True)
 
-    cols_nom = df_diesel_agrupado.filter(regex='^valor_de_venda_diesel').columns
+    cols_nom = df_diesel_agrupado.filter(regex='^valor_de_venda_DIESEL').columns
     df_diesel_agrupado['valor_venda_diesel_media_geral'] = df_diesel_agrupado[cols_nom].astype(float).mean(axis=1, skipna=True)
 
     df_diesel_agrupado.rename(columns={
-        'valor_de_venda_real_diesel': 'venda_real_diesel_comum',
-        'valor_de_venda_diesel': 'valor_venda_diesel_comum'
+        'valor_de_venda_real_DIESEL': 'venda_real_diesel_comum',
+        'valor_de_venda_DIESEL': 'valor_venda_diesel_comum'
     }, inplace=True)
 
+
+    print('Consolidando tabelas')
+    
     df_unificado = df_precos.merge(df_safra_nacional, on="data_referencia", how="left")
     df_unificado = df_unificado.merge(df_diesel_agrupado, on=["data_referencia", "capital_join"], how="left")
     df_unificado = df_unificado.merge(df_repasse, on=["data_referencia", "capital_join"], how="left")
@@ -109,7 +114,9 @@ def consolidar_base_econometrica(salvar_parquet: bool = True) -> pd.DataFrame:
     # Filtra colunas relevantes
     cols_finais = [c for c in ordem_desejada if c in df_unificado.columns]
     df_unificado = df_unificado[cols_finais]
-
+    
+    print("Salvando parquet")
+    
     if salvar_parquet:
         print("Salvando Parquet em data/processed/consolidado")
         raiz = Path(__file__).resolve().parent.parent
@@ -119,5 +126,8 @@ def consolidar_base_econometrica(salvar_parquet: bool = True) -> pd.DataFrame:
         arquivo_final = pasta_destino / "painel_feijao_consolidado.parquet"
         df_unificado.to_parquet(arquivo_final, index=False)
         print(f"Arquivo gerado em: {arquivo_final}")
-
+    print("fim")
     return df_unificado
+
+if __name__ == "__main__":
+    consolidar_base_econometrica(salvar_parquet=True)
