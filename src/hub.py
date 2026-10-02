@@ -58,7 +58,11 @@ def push_producao_feijao() -> None:
     from src.config import DATA_INTERIM
     push_folder(DATA_INTERIM / "safra", "interim/safra")
     
-    
+def push_consolidado():
+
+    push_folder("data/processed/consolidado", "processed/consolidado")
+
 if __name__ == "__main__":
     push_diesel()
     push_producao_feijao()
+    push_consolidado()
